@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-
+	"time"
 )
 type Message struct {
 	from 	string
@@ -10,23 +10,53 @@ type Message struct {
 }
 type Demon struct{
 	messageCh chan Message
+	quitCh chan struct{}
 }
 
 func (d *Demon) demonStopandListen() (){
 	fmt.Println("sending message")
 	for {
-		msg := <- d.messageCh
-		fmt.Printf("recienced message frim %s payload %s", msg.from, msg.payloads)
+		select{
+		case msg := <- d.messageCh:
+			fmt.Printf("recieved a message from %s\npayload %s\n", msg.from, msg.payloads)
+		case <- d.quitCh:
+			fmt.Println("the server is doiung a sitdown")
+			break
+		default:
+		}
 	}
+}
+
+func sendMesage(msgCh chan Message, payload string){
+	msg := Message {
+		from: "JOEY",
+		payloads: payload,
+	}
+	msgCh <- msg
 }
 func DemonServer(){
 
 } 
+
+func graceQuit(quitch chan struct{}) {
+	close(quitch)
+}
 func main (){
 s := &Demon{
 	messageCh: make(chan Message),
+	quitCh: make(chan struct{}),
 }
 go s.demonStopandListen()
+go func (){
+	time.Sleep( 2 * time.Millisecond)
+	sendMesage(s.messageCh, "Yello")
+}()
+go func (){
+	time.Sleep( 4 * time.Millisecond)
+	sendMesage(s.messageCh, "Yello")
+	graceQuit(s.quitCh)
+}()
+select{}
 
 }
 
