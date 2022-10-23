@@ -13,31 +13,28 @@ type Demon struct{
 	quitCh chan struct{}
 }
 
-func (d *Demon) demonStopandListen() (){
-	fmt.Println("sending message")
+func (d *Demon) demonStopandListen(){
+running:
 	for {
 		select{
 		case msg := <- d.messageCh:
 			fmt.Printf("recieved a message from %s\npayload %s\n", msg.from, msg.payloads)
 		case <- d.quitCh:
-			fmt.Println("the server is doiung a sitdown")
-			break
+			fmt.Println("the server is doing a sitdown")
+			break running
 		default:
 		}
 	}
+	fmt.Println("gracefull shutdown")
 }
 
 func sendMesage(msgCh chan Message, payload string){
 	msg := Message {
-		from: "JOEY",
+		from: "Joe",
 		payloads: payload,
 	}
 	msgCh <- msg
 }
-func DemonServer(){
-
-} 
-
 func graceQuit(quitch chan struct{}) {
 	close(quitch)
 }
@@ -57,7 +54,6 @@ go func (){
 	graceQuit(s.quitCh)
 }()
 select{}
-
 }
 
 // func main(){
